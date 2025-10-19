@@ -1,0 +1,8 @@
+{
+  "version": "10-19-25",
+  "name": "Home Assistant",
+  "description": "Control and monitor Home Assistant devices including lights, switches, fans, media players, and TV remotes",
+  "required_secrets": ["HA_URL", "HA_TOKEN"],
+  "auto_update": false
+}
+

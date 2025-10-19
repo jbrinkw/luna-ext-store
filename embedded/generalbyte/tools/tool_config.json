@@ -1,0 +1,15 @@
+{
+  "GENERAL_ACTION_send_phone_notification": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "GENERAL_GET_web_search": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "GENERAL_GET_weather": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  }
+}
+

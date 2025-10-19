@@ -1,0 +1,19 @@
+{
+  "NOTES_GET_project_hierarchy": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "NOTES_GET_project_text": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "NOTES_GET_notes_by_date_range": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "NOTES_UPDATE_project_note": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  }
+}
+

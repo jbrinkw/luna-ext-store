@@ -1,0 +1,31 @@
+{
+  "TODOLIST_GET_list_projects": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_GET_list_sections": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_GET_task_by_id": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_GET_list_tasks": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_ACTION_create_task": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_UPDATE_update_task": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  },
+  "TODOLIST_ACTION_complete_task": {
+    "enabled_in_mcp": true,
+    "passthrough": false
+  }
+}
+

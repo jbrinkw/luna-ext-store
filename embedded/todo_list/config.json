@@ -1,0 +1,8 @@
+{
+  "version": "10-19-25",
+  "name": "Todo List",
+  "description": "Manage tasks and projects via Todoist REST API with full CRUD operations",
+  "required_secrets": ["TODOIST_API_TOKEN"],
+  "auto_update": false
+}
+

@@ -1,0 +1,92 @@
+{
+  "version": "10-19-25",
+  "last_updated": "2025-10-19T03:24:00Z",
+  
+  "extensions": [
+    {
+      "id": "generalbyte",
+      "name": "GeneralByte",
+      "type": "embedded",
+      "path": "embedded/generalbyte",
+      "version": "10-19-25",
+      "description": "Minimal utilities including phone notifications via Home Assistant, Tavily web search, and weather information",
+      "author": "Jeremy Brinkworth",
+      "category": "utilities",
+      "has_ui": false,
+      "tool_count": 3,
+      "service_count": 0,
+      "required_secrets": ["HA_URL", "HA_TOKEN", "TAVILY_API_KEY"],
+      "tags": ["notifications", "web-search", "weather", "utilities"]
+    },
+    {
+      "id": "home_assistant",
+      "name": "Home Assistant",
+      "type": "embedded",
+      "path": "embedded/home_assistant",
+      "version": "10-19-25",
+      "description": "Control and monitor Home Assistant devices including lights, switches, fans, media players, and TV remotes",
+      "author": "Jeremy Brinkworth",
+      "category": "smart-home",
+      "has_ui": false,
+      "tool_count": 5,
+      "service_count": 0,
+      "required_secrets": ["HA_URL", "HA_TOKEN"],
+      "tags": ["home-assistant", "smart-home", "automation", "iot", "tv-remote"]
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "type": "embedded",
+      "path": "embedded/notes",
+      "version": "10-19-25",
+      "description": "Obsidian-style note management with project hierarchy, dated entries, and markdown support",
+      "author": "Jeremy Brinkworth",
+      "category": "productivity",
+      "has_ui": false,
+      "tool_count": 4,
+      "service_count": 0,
+      "required_secrets": [],
+      "tags": ["notes", "obsidian", "markdown", "projects", "productivity"]
+    },
+    {
+      "id": "todo_list",
+      "name": "Todo List",
+      "type": "embedded",
+      "path": "embedded/todo_list",
+      "version": "10-19-25",
+      "description": "Manage tasks and projects via Todoist REST API with full CRUD operations",
+      "author": "Jeremy Brinkworth",
+      "category": "productivity",
+      "has_ui": false,
+      "tool_count": 7,
+      "service_count": 0,
+      "required_secrets": ["TODOIST_API_TOKEN"],
+      "tags": ["todo", "todoist", "tasks", "productivity", "gtd"]
+    },
+    {
+      "id": "grocy",
+      "name": "Grocy",
+      "type": "external",
+      "source": "github:jbrinkw/luna-ext-grocy",
+      "version": "10-19-25",
+      "description": "Grocy grocery and household management integration for tracking inventory, shopping lists, recipes, and meal planning",
+      "author": "Jeremy Brinkworth",
+      "category": "productivity",
+      "has_ui": false,
+      "tool_count": 0,
+      "service_count": 0,
+      "required_secrets": ["GROCY_URL", "GROCY_API_KEY"],
+      "tags": ["grocy", "grocery", "inventory", "shopping", "household", "productivity"],
+      "preview_url": "https://github.com/jbrinkw/luna-ext-grocy"
+    }
+  ],
+  
+  "categories": [
+    {"id": "productivity", "name": "Productivity"},
+    {"id": "smart-home", "name": "Smart Home"},
+    {"id": "utilities", "name": "Utilities"},
+    {"id": "communication", "name": "Communication"},
+    {"id": "development", "name": "Development"}
+  ]
+}
+
