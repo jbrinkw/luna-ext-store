@@ -1,6 +1,6 @@
 {
-  "version": "10-19-25",
-  "last_updated": "2025-10-19T03:24:00Z",
+  "version": "1.1",
+  "last_updated": "2025-10-22T00:05:00Z",
   
   "extensions": [
     {
@@ -49,6 +49,21 @@
       "tags": ["notes", "obsidian", "markdown", "projects", "productivity"]
     },
     {
+      "id": "quick_chat",
+      "name": "Quick Chat",
+      "type": "embedded",
+      "path": "embedded/quick_chat",
+      "version": "10-21-25",
+      "description": "Quick chat interface with agent selection and MCP tools",
+      "author": "Jeremy Brinkworth",
+      "category": "communication",
+      "has_ui": true,
+      "tool_count": 0,
+      "service_count": 0,
+      "required_secrets": [],
+      "tags": ["chat", "agents", "ui"]
+    },
+    {
       "id": "todo_list",
       "name": "Todo List",
       "type": "embedded",
@@ -86,7 +101,165 @@
     {"id": "smart-home", "name": "Smart Home"},
     {"id": "utilities", "name": "Utilities"},
     {"id": "communication", "name": "Communication"},
-    {"id": "development", "name": "Development"}
+    {"id": "development", "name": "Development"},
+    {"id": "infrastructure", "name": "Infrastructure"}
+  ],
+  "external_services": [
+    {
+      "name": "postgres",
+      "display_name": "PostgreSQL",
+      "description": "Self-hosted Postgres database suitable for Luna services and extensions.",
+      "category": "infrastructure",
+      "version": "16-alpine",
+      "repository": "https://hub.docker.com/_/postgres",
+      "path": "services/postgres",
+      "tags": ["database", "sql", "docker"],
+      "provides_vars": [
+        "DATABASE_URL",
+        "POSTGRES_HOST",
+        "POSTGRES_PORT",
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD"
+      ],
+      "config_fields": 4,
+      "service_definition": {
+        "name": "postgres",
+        "display_name": "PostgreSQL",
+        "description": "Self-hosted Postgres database suitable for Luna services and extensions.",
+        "category": "infrastructure",
+        "version": "16-alpine",
+        "repository": "https://hub.docker.com/_/postgres",
+        "tags": ["database", "sql", "docker"],
+        "config_form": {
+          "fields": [
+            {
+              "name": "database",
+              "label": "Database Name",
+              "type": "text",
+              "default": "luna",
+              "required": true,
+              "help": "Primary database that will be created on first start."
+            },
+            {
+              "name": "user",
+              "label": "Username",
+              "type": "text",
+              "default": "luna_user",
+              "required": true
+            },
+            {
+              "name": "password",
+              "label": "Password",
+              "type": "password",
+              "required": true,
+              "help": "Strong password used for the Postgres user."
+            },
+            {
+              "name": "port",
+              "label": "Host Port",
+              "type": "number",
+              "default": 5432,
+              "required": true,
+              "help": "Port exposed on localhost for client connections."
+            }
+          ]
+        },
+        "commands": {
+          "install": "mkdir -p $(pwd)/external_services/postgres/data && docker run -d --name luna_postgres --restart unless-stopped -p {{ port }}:5432 -e POSTGRES_DB={{ database }} -e POSTGRES_USER={{ user }} -e POSTGRES_PASSWORD={{ password }} -v $(pwd)/external_services/postgres/data:/var/lib/postgresql/data postgres:16-alpine",
+          "uninstall": "docker rm -f luna_postgres || true",
+          "start": "docker start luna_postgres",
+          "stop": "docker stop luna_postgres",
+          "restart": "docker restart luna_postgres",
+          "health_check": "docker ps --filter name=luna_postgres --format '{{.Status}}'"
+        },
+        "health_check_expected": "Up",
+        "install_timeout": 180,
+        "provides_vars": [
+          "DATABASE_URL",
+          "POSTGRES_HOST",
+          "POSTGRES_PORT",
+          "POSTGRES_DB",
+          "POSTGRES_USER",
+          "POSTGRES_PASSWORD"
+        ],
+        "post_install_env": {
+          "DATABASE_URL": "postgresql://{{ user }}:{{ password }}@127.0.0.1:{{ port }}/{{ database }}",
+          "POSTGRES_HOST": "127.0.0.1",
+          "POSTGRES_PORT": "{{ port }}",
+          "POSTGRES_DB": "{{ database }}",
+          "POSTGRES_USER": "{{ user }}",
+          "POSTGRES_PASSWORD": "{{ password }}"
+        }
+      }
+    },
+    {
+      "name": "redis",
+      "display_name": "Redis",
+      "description": "In-memory data store for caching and lightweight queues.",
+      "category": "infrastructure",
+      "version": "7-alpine",
+      "repository": "https://hub.docker.com/_/redis",
+      "path": "services/redis",
+      "tags": ["cache", "kv", "docker"],
+      "provides_vars": [
+        "REDIS_URL",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_PASSWORD"
+      ],
+      "config_fields": 2,
+      "service_definition": {
+        "name": "redis",
+        "display_name": "Redis",
+        "description": "In-memory data store for caching and lightweight queues.",
+        "category": "infrastructure",
+        "version": "7-alpine",
+        "repository": "https://hub.docker.com/_/redis",
+        "tags": ["cache", "kv", "docker"],
+        "config_form": {
+          "fields": [
+            {
+              "name": "port",
+              "label": "Host Port",
+              "type": "number",
+              "default": 6379,
+              "required": true,
+              "help": "Port exposed on localhost for Redis clients."
+            },
+            {
+              "name": "password",
+              "label": "Password",
+              "type": "password",
+              "required": true,
+              "help": "AUTH password passed to Redis; required for secure deployments."
+            }
+          ]
+        },
+        "commands": {
+          "install": "mkdir -p $(pwd)/external_services/redis/data && docker run -d --name luna_redis --restart unless-stopped -p {{ port }}:6379 -e REDIS_ARGS=\"--requirepass {{ password }}\" -v $(pwd)/external_services/redis/data:/data redis:7-alpine",
+          "uninstall": "docker rm -f luna_redis || true",
+          "start": "docker start luna_redis",
+          "stop": "docker stop luna_redis",
+          "restart": "docker restart luna_redis",
+          "health_check": "docker exec luna_redis redis-cli -a {{ password }} PING"
+        },
+        "health_check_expected": "PONG",
+        "install_timeout": 120,
+        "provides_vars": [
+          "REDIS_URL",
+          "REDIS_HOST",
+          "REDIS_PORT",
+          "REDIS_PASSWORD"
+        ],
+        "post_install_env": {
+          "REDIS_URL": "redis://:{{ password }}@127.0.0.1:{{ port }}/0",
+          "REDIS_HOST": "127.0.0.1",
+          "REDIS_PORT": "{{ port }}",
+          "REDIS_PASSWORD": "{{ password }}"
+        }
+      }
+    }
   ]
 }
 

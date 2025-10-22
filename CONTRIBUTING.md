@@ -206,6 +206,57 @@ Add your extension to the `extensions` array using the same metadata as your JSO
 ### Step 4: Submit Pull Request
 See [Submission Process](#submission-process) below.
 
+## Adding an External Service
+
+External services power shared infrastructure (databases, caches, dashboards). Registry schema **v1.1** requires both an inline definition and a quick-look summary.
+
+### Step 1: Create service definition
+Add `services/<service_name>/service.json` with the complete payload described in `CLAUDE.md`:
+
+```json
+{
+  "name": "service_name",
+  "display_name": "Friendly Name",
+  "description": "What the service provides.",
+  "category": "infrastructure",
+  "version": "image-tag",
+  "repository": "https://example.com/upstream",
+  "tags": ["docker", "category"],
+  "config_form": { "fields": [...] },
+  "commands": {
+    "install": "...",
+    "uninstall": "...",
+    "start": "...",
+    "stop": "...",
+    "restart": "...",
+    "health_check": "..."
+  },
+  "health_check_expected": "STRING",
+  "install_timeout": 120,
+  "provides_vars": ["VAR_ONE"],
+  "post_install_env": { "VAR_ONE": "templated value" },
+  "ui": { "base_path": "ext_service", "slug": "service", "port_field": "port", "open_mode": "iframe" }
+}
+```
+
+* `commands` must cover the full lifecycle and rely only on variables supplied via `config_form`.
+* `config_form.fields` drives the Hub UI; keep labels concise and supply defaults where practical.
+* Include a `ui` block whenever the service exposes a dashboard so Luna can register proxy routes automatically.
+
+### Step 2: Update registry.json
+1. Bump `"version"` to `1.1` (already done in the main branch).
+2. Add a new entry to `external_services` with:
+   - `name`, `display_name`, `description`, `category`, `version`, `repository`
+   - quick metadata: `tags`, `provides_vars`, `config_fields` (field count), optional `ui`
+   - either `service_definition` (preferred) containing the inline JSON or `service_definition_url` pointing to the raw file in this repo.
+3. Keep `extensions` and `categories` arrays intact for backwards compatibility.
+
+### Step 3: Test locally
+1. Validate JSON (`python -m json.tool services/<name>/service.json`).
+2. (Optional) POST the payload to a running Luna instance:  
+   `curl -X POST http://127.0.0.1:8080/api/external-services/upload -H "Content-Type: application/json" --data '{"service_definition": ...}'`
+3. Confirm the service appears in the Infrastructure tab with the expected badges (provided env vars, config fields, UI availability).
+
 ## Tool Guidelines
 
 ### Naming Convention

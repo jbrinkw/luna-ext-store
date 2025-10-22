@@ -1,0 +1,7 @@
+{
+  "version": "10-21-25",
+  "name": "Quick Chat",
+  "description": "Quick chat interface with agent selection and MCP tools",
+  "required_secrets": [],
+  "auto_update": false
+}

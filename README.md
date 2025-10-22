@@ -56,6 +56,17 @@ Obsidian-style note management with:
 - Markdown support
 - Section organization
 
+#### Quick Chat
+**Category**: Communication  
+**Tools**: 0  
+**Secrets**: None  
+**UI**: Streamlit chat interface
+
+Provides a Luna-native chat surface with:
+- Agent selection sidebar
+- Auto-discovered MCP tools
+- Session memory display and tool trace viewer
+
 #### Todo List
 **Category**: Productivity  
 **Tools**: 7  
@@ -79,6 +90,22 @@ Grocy grocery and household management integration for:
 - Shopping lists
 - Recipe management
 - Meal planning
+
+### External Services
+
+External services provide shared infrastructure (databases, caches, dashboards) that Luna can manage for you. Each service ships with a `service.json` definition describing install commands, config forms, health checks, and any environment variables it exports.
+
+#### PostgreSQL
+**Category**: Infrastructure  
+**Version**: `16-alpine`  
+**Tags**: database, sql, docker  
+**Provides**: `DATABASE_URL`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`
+
+#### Redis
+**Category**: Infrastructure  
+**Version**: `7-alpine`  
+**Tags**: cache, kv, docker  
+**Provides**: `REDIS_URL`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
 
 ## Extension Types
 
@@ -110,6 +137,28 @@ The `registry.json` file is the master catalog that Luna Hub UI fetches to displ
 - Required secrets
 - Tool and service counts
 - Categories and tags
+- External service definitions (schema 1.1+)
+
+### external_services (Registry v1.1)
+
+Registry version 1.1 introduces an `external_services` array. Each entry carries badge-worthy metadata (tags, provided environment variables, config field count, optional UI info) and either an inline `service_definition` block or a `service_definition_url` pointing to a downloadable JSON artifact. The inline definition mirrors the files published under `services/<name>/service.json`.
+
+```json
+{
+  "name": "postgres",
+  "display_name": "PostgreSQL",
+  "description": "Self-hosted Postgres database suitable for Luna services and extensions.",
+  "category": "infrastructure",
+  "version": "16-alpine",
+  "repository": "https://hub.docker.com/_/postgres",
+  "tags": ["database", "sql", "docker"],
+  "provides_vars": ["DATABASE_URL", "POSTGRES_HOST", "POSTGRES_PORT", "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD"],
+  "config_fields": 4,
+  "service_definition": { "... full service.json contents ..." }
+}
+```
+
+See `services/postgres/service.json` and `services/redis/service.json` for canonical examples.
 
 ## Installation in Luna
 
