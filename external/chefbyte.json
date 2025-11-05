@@ -1,0 +1,17 @@
+{
+  "id": "chefbyte",
+  "name": "ChefByte",
+  "type": "external",
+  "source": "github:jbrinkw/luna-ext-chefbyte",
+  "version": "11-05-25",
+  "description": "Grocy inventory, meal planning, nutrition tracking, and shopping list management with AI-powered features",
+  "author": "Jeremy Brinkworth",
+  "category": "productivity",
+  "has_ui": false,
+  "tool_count": 12,
+  "service_count": 0,
+  "required_secrets": ["GROCY_BASE_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+  "tags": ["grocy", "grocery", "inventory", "shopping", "meal-planning", "nutrition", "ai", "productivity"],
+  "preview_url": "https://github.com/jbrinkw/luna-ext-chefbyte"
+}
+

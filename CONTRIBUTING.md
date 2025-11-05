@@ -50,11 +50,15 @@ embedded/your_extension/
 ### config.json Format
 ```json
 {
-  "version": "10-19-25",
+  "version": "11-04-25",
   "name": "Extension Display Name",
   "description": "Brief one-line description",
   "required_secrets": ["SECRET_KEY_1", "SECRET_KEY_2"],
-  "auto_update": false
+  "auto_update": false,
+  "ui": {
+    "trailing_slash": true,
+    "open_mode": "new_tab"
+  }
 }
 ```
 
@@ -64,6 +68,8 @@ embedded/your_extension/
 - `description`: One-line summary (< 120 chars)
 - `required_secrets`: Array of env var names needed
 - `auto_update`: Always false (not implemented in MVP)
+- `ui.trailing_slash`: Optional, enforce trailing slash on UI routes (default: true)
+- `ui.open_mode`: Optional, how to open UI: "new_tab", "modal", "iframe" (default: "new_tab")
 
 ### tools/tool_config.json Format
 ```json
@@ -95,39 +101,42 @@ Use the template above, filling in your extension's details.
 Create `tools/your_tools.py`:
 
 ```python
-from pydantic import BaseModel, Field
-from typing import Tuple
+import json
+from typing import Optional
 
 SYSTEM_PROMPT = """
 Description of what your extension does.
 Guide the LLM on how to use your tools.
 """
 
-# Pydantic models for validation
-class YourToolArgs(BaseModel):
-    param1: str = Field(...)
-    param2: int = Field(default=10)
-
 # Tool implementation
-def DOMAIN_ACTION_your_tool(param1: str, param2: int = 10) -> Tuple[bool, str]:
+def DOMAIN_ACTION_your_tool(param1: str, param2: int = 10) -> tuple[bool, str]:
     """One-sentence summary of what this tool does.
     
     Example Prompt: natural language example of how to invoke
-    Example Response: {"result": "example output"}
-    Example Args: {"param1": "string", "param2": 10}
     
-    Notes: Optional additional details.
+    Example Response:
+    {
+      "status": "success",
+      "result": "example output"
+    }
+    
+    Example Args:
+    {
+      "param1": "string",
+      "param2": 10
+    }
     """
     try:
-        # Validate inputs
-        args = YourToolArgs(param1=param1, param2=param2)
-        
         # Your logic here
-        result = f"Processed {args.param1} with {args.param2}"
-        
-        return (True, f'{{"result": "{result}"}}')
+        result = {
+            "status": "success",
+            "result": f"Processed {param1} with {param2}"
+        }
+        return (True, json.dumps(result, ensure_ascii=False))
     except Exception as e:
-        return (False, f"Error: {str(e)}")
+        error = {"status": "error", "message": str(e)}
+        return (False, json.dumps(error, ensure_ascii=False))
 
 # Export tools
 TOOLS = [
@@ -138,18 +147,93 @@ TOOLS = [
 ### Step 4: Create tool_config.json
 List each tool with its configuration flags.
 
-### Step 5: Write readme.md
+### Step 5: Add UI Component (Optional)
+
+If your extension has a UI, create `ui/` directory:
+
+```bash
+mkdir ui
+cd ui
+```
+
+Create `ui/start.sh`:
+```bash
+#!/bin/bash
+set -e
+PORT=$1
+if [ -z "$PORT" ]; then
+    echo "Error: Port not provided"
+    exit 1
+fi
+
+# Install dependencies if needed
+[ ! -d "node_modules" ] && npm install
+
+# Start server
+npm run dev -- --port $PORT --host 0.0.0.0
+```
+
+Make it executable: `chmod +x ui/start.sh`
+
+**Environment variables provided:**
+- `$1` - Port number (first argument)
+- `$PORT` - Port number (environment variable)
+- `$PATH` - Includes Luna's `.venv/bin`
+- `$LUNA_PORTS` - JSON with all port assignments
+
+**Routing:** UI will be accessible at `https://domain.com/ext/extension_name/`
+
+### Step 6: Add Service Component (Optional)
+
+If your extension needs a background service, create `services/` directory:
+
+```bash
+mkdir -p services/backend
+cd services/backend
+```
+
+Create `services/backend/service_config.json`:
+```json
+{
+  "name": "backend",
+  "requires_port": true,
+  "health_check": "/healthz",
+  "restart_on_failure": true
+}
+```
+
+Create `services/backend/start.sh`:
+```bash
+#!/bin/bash
+set -e
+PORT=$1
+if [ -z "$PORT" ]; then
+    echo "Error: Port not provided"
+    exit 1
+fi
+
+# Install dependencies
+[ -f requirements.txt ] && pip install -r requirements.txt
+
+# Start service
+uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+Make it executable: `chmod +x services/backend/start.sh`
+
+**Routing:** Service will be accessible at `https://domain.com/api/extension_name/`
+
+### Step 7: Write readme.md
 See [Documentation Requirements](#documentation-requirements) below.
 
-### Step 6: Add requirements.txt
+### Step 8: Add requirements.txt
 List Python packages:
 ```
-pydantic>=2.0.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 ```
 
-### Step 7: Update registry.json
+### Step 9: Update registry.json
 Add your extension to the `extensions` array:
 
 ```json
@@ -158,7 +242,7 @@ Add your extension to the `extensions` array:
   "name": "Your Extension",
   "type": "embedded",
   "path": "embedded/your_extension",
-  "version": "10-19-25",
+  "version": "11-04-25",
   "description": "Brief description",
   "author": "Your Name",
   "category": "productivity",
@@ -170,7 +254,7 @@ Add your extension to the `extensions` array:
 }
 ```
 
-### Step 8: Submit Pull Request
+### Step 10: Submit Pull Request
 See [Submission Process](#submission-process) below.
 
 ## Adding an External Extension
@@ -211,7 +295,7 @@ See [Submission Process](#submission-process) below.
 External services power shared infrastructure (databases, caches, dashboards). Registry schema **v1.1** requires both an inline definition and a quick-look summary.
 
 ### Step 1: Create service definition
-Add `services/<service_name>/service.json` with the complete payload described in `CLAUDE.md`:
+Add `services/<service_name>/service.json` with the complete payload described in the README.md (Section 6):
 
 ```json
 {
@@ -276,44 +360,63 @@ Follow the pattern: `DOMAIN_{GET|UPDATE|ACTION}_VerbNoun`
 Every tool must have a docstring with these sections:
 
 ```python
-def YOUR_TOOL(param: str) -> Tuple[bool, str]:
+def YOUR_TOOL(param: str) -> tuple[bool, str]:
     """One-sentence summary.
     
     Example Prompt: natural language command
-    Example Response: {"key": "value"}
-    Example Args: {"param": "string"}
     
-    Notes: Optional additional context.
+    Example Response:
+    {
+      "status": "success",
+      "key": "value"
+    }
+    
+    Example Args:
+    {
+      "param": "string"
+    }
     """
 ```
 
 ### Return Format
-All tools must return `Tuple[bool, str]`:
+All tools must return `tuple[bool, str]`:
 - `bool`: Success flag (True/False)
 - `str`: JSON string result or error message
 
+**Critical**: Always use `json.dumps(..., ensure_ascii=False)` to properly encode Unicode characters.
+
 ```python
+import json
+
 # Success
-return (True, '{"result": "data"}')
+result = {"status": "success", "data": "..."}
+return (True, json.dumps(result, ensure_ascii=False))
 
 # Failure
-return (False, "Error: something went wrong")
+error = {"status": "error", "message": "Something went wrong"}
+return (False, json.dumps(error, ensure_ascii=False))
 ```
 
 ### Input Validation
-Use Pydantic models to validate inputs:
+Validate inputs directly in your function:
 
 ```python
-class MyToolArgs(BaseModel):
-    required_param: str = Field(...)
-    optional_param: int = Field(default=10)
+import json
 
-def MY_TOOL(required_param: str, optional_param: int = 10) -> Tuple[bool, str]:
+def MY_TOOL(required_param: str, optional_param: int = 10) -> tuple[bool, str]:
+    """Tool description with docstring sections."""
     try:
-        args = MyToolArgs(required_param=required_param, optional_param=optional_param)
-        # Use args.required_param, args.optional_param
+        # Validate inputs
+        if not required_param:
+            error = {"status": "error", "message": "required_param cannot be empty"}
+            return (False, json.dumps(error, ensure_ascii=False))
+        
+        # Your logic here
+        result = {"status": "success", "data": "..."}
+        return (True, json.dumps(result, ensure_ascii=False))
     except Exception as e:
-        return (False, f"Validation error: {e}")
+        error = {"status": "error", "message": str(e)}
+        return (False, json.dumps(error, ensure_ascii=False))
 ```
 
 ## Documentation Requirements

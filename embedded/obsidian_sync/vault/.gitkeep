@@ -1,7 +1,0 @@
-# Obsidian Sync - Vault Directory
-
-This directory contains the synced copy of your Obsidian vault.
-
-The sync service automatically copies files from the location specified in `OBSIDIAN_VAULT_LINK` to this directory every 5 minutes.
-
-**Do not manually edit files here** - changes will be overwritten on the next sync. Edit files in your original Obsidian vault instead.

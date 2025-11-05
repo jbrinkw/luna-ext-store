@@ -3,7 +3,10 @@
   "name": "Obsidian Sync",
   "description": "Syncs Obsidian vault and provides note management tools",
   "required_secrets": [
-    "OBSIDIAN_VAULT_LINK"
+    "OBSIDIAN_VAULT_LINK",
+    "OBSIDIAN_VAULT_GIT_TOKEN"
   ],
-  "auto_update": false
+  "auto_update": false,
+  "enabled": true,
+  "source": "github:jbrinkw/luna-ext-store:embedded/obsidian_sync"
 }

@@ -34,21 +34,6 @@
       "tags": ["home-assistant", "smart-home", "automation", "iot", "tv-remote"]
     },
     {
-      "id": "notes",
-      "name": "Notes",
-      "type": "embedded",
-      "path": "embedded/notes",
-      "version": "10-19-25",
-      "description": "Obsidian-style note management with project hierarchy, dated entries, and markdown support",
-      "author": "Jeremy Brinkworth",
-      "category": "productivity",
-      "has_ui": false,
-      "tool_count": 4,
-      "service_count": 0,
-      "required_secrets": [],
-      "tags": ["notes", "obsidian", "markdown", "projects", "productivity"]
-    },
-    {
       "id": "obsidian_sync",
       "name": "Obsidian Sync",
       "type": "embedded",
@@ -94,20 +79,20 @@
       "tags": ["todo", "todoist", "tasks", "productivity", "gtd"]
     },
     {
-      "id": "grocy",
-      "name": "Grocy",
+      "id": "chefbyte",
+      "name": "ChefByte",
       "type": "external",
-      "source": "github:jbrinkw/luna-ext-grocy",
-      "version": "10-19-25",
-      "description": "Grocy grocery and household management integration for tracking inventory, shopping lists, recipes, and meal planning",
+      "source": "github:jbrinkw/luna-ext-chefbyte",
+      "version": "11-05-25",
+      "description": "Grocy inventory, meal planning, nutrition tracking, and shopping list management with AI-powered features",
       "author": "Jeremy Brinkworth",
       "category": "productivity",
       "has_ui": false,
-      "tool_count": 0,
+      "tool_count": 12,
       "service_count": 0,
-      "required_secrets": ["GROCY_URL", "GROCY_API_KEY"],
-      "tags": ["grocy", "grocery", "inventory", "shopping", "household", "productivity"],
-      "preview_url": "https://github.com/jbrinkw/luna-ext-grocy"
+      "required_secrets": ["GROCY_BASE_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+      "tags": ["grocy", "grocery", "inventory", "shopping", "meal-planning", "nutrition", "ai", "productivity"],
+      "preview_url": "https://github.com/jbrinkw/luna-ext-chefbyte"
     }
   ],
   
@@ -209,69 +194,63 @@
       }
     },
     {
-      "name": "redis",
-      "display_name": "Redis",
-      "description": "In-memory data store for caching and lightweight queues.",
+      "name": "tailscale",
+      "display_name": "Tailscale",
+      "description": "Zero-config VPN for secure access to your Luna instance from anywhere",
       "category": "infrastructure",
-      "version": "7-alpine",
-      "repository": "https://hub.docker.com/_/redis",
-      "path": "services/redis",
-      "tags": ["cache", "kv", "docker"],
+      "version": "latest",
+      "repository": "https://tailscale.com/kb/1112/userspace-networking",
+      "path": "services/tailscale",
+      "tags": ["vpn", "networking", "security", "remote-access"],
       "provides_vars": [
-        "REDIS_URL",
-        "REDIS_HOST",
-        "REDIS_PORT",
-        "REDIS_PASSWORD"
+        "TAILSCALE_HOSTNAME",
+        "TAILSCALE_IP"
       ],
       "config_fields": 2,
       "service_definition": {
-        "name": "redis",
-        "display_name": "Redis",
-        "description": "In-memory data store for caching and lightweight queues.",
+        "name": "tailscale",
+        "display_name": "Tailscale",
+        "description": "Zero-config VPN for secure access to your Luna instance from anywhere. Requires a Tailscale account (free for personal use).",
         "category": "infrastructure",
-        "version": "7-alpine",
-        "repository": "https://hub.docker.com/_/redis",
-        "tags": ["cache", "kv", "docker"],
+        "version": "latest",
+        "repository": "https://tailscale.com",
+        "tags": ["vpn", "networking", "security", "remote-access"],
         "config_form": {
           "fields": [
             {
-              "name": "port",
-              "label": "Host Port",
-              "type": "number",
-              "default": 6379,
-              "required": true,
-              "help": "Port exposed on localhost for Redis clients."
-            },
-            {
-              "name": "password",
-              "label": "Password",
+              "name": "auth_key",
+              "label": "Auth Key",
               "type": "password",
               "required": true,
-              "help": "AUTH password passed to Redis; required for secure deployments."
+              "help": "Tailscale auth key from https://login.tailscale.com/admin/settings/keys. Use a reusable key for easier management."
+            },
+            {
+              "name": "hostname",
+              "label": "Hostname",
+              "type": "text",
+              "default": "luna",
+              "required": true,
+              "help": "Hostname for this device in your Tailscale network"
             }
           ]
         },
         "commands": {
-          "install": "mkdir -p $(pwd)/external_services/redis/data && docker run -d --name luna_redis --restart unless-stopped -p {{ port }}:6379 -e REDIS_ARGS=\"--requirepass {{ password }}\" -v $(pwd)/external_services/redis/data:/data redis:7-alpine",
-          "uninstall": "docker rm -f luna_redis || true",
-          "start": "docker start luna_redis",
-          "stop": "docker stop luna_redis",
-          "restart": "docker restart luna_redis",
-          "health_check": "docker exec luna_redis redis-cli -a {{ password }} PING"
+          "install": "mkdir -p $(pwd)/external_services/tailscale/state && docker run -d --name luna_tailscale --restart unless-stopped --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $(pwd)/external_services/tailscale/state:/var/lib/tailscale -e TS_AUTHKEY={{ auth_key }} -e TS_HOSTNAME={{ hostname }} -e TS_STATE_DIR=/var/lib/tailscale tailscale/tailscale:latest",
+          "uninstall": "docker rm -f luna_tailscale || true && rm -rf $(pwd)/external_services/tailscale/state",
+          "start": "docker start luna_tailscale",
+          "stop": "docker stop luna_tailscale",
+          "restart": "docker restart luna_tailscale",
+          "health_check": "docker exec luna_tailscale tailscale status --json | grep -q '\"BackendState\":\"Running\"'"
         },
-        "health_check_expected": "PONG",
-        "install_timeout": 120,
+        "health_check_expected": 0,
+        "install_timeout": 180,
         "provides_vars": [
-          "REDIS_URL",
-          "REDIS_HOST",
-          "REDIS_PORT",
-          "REDIS_PASSWORD"
+          "TAILSCALE_HOSTNAME",
+          "TAILSCALE_IP"
         ],
         "post_install_env": {
-          "REDIS_URL": "redis://:{{ password }}@127.0.0.1:{{ port }}/0",
-          "REDIS_HOST": "127.0.0.1",
-          "REDIS_PORT": "{{ port }}",
-          "REDIS_PASSWORD": "{{ password }}"
+          "TAILSCALE_HOSTNAME": "{{ hostname }}",
+          "TAILSCALE_IP": "$(docker exec luna_tailscale tailscale ip -4 2>/dev/null || echo 'pending')"
         }
       }
     }

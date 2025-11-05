@@ -1,8 +1,0 @@
-{
-  "version": "10-19-25",
-  "name": "Notes",
-  "description": "Obsidian-style note management with project hierarchy, dated entries, and markdown support",
-  "required_secrets": [],
-  "auto_update": false
-}
-
