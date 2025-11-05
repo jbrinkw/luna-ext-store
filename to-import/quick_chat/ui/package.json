@@ -1,0 +1,12 @@
+{
+  "name": "quick-chat-ui",
+  "version": "1.0.0",
+  "description": "Quick Chat UI - Streamlit-based chat interface for Luna",
+  "scripts": {
+    "start": "./start.sh"
+  },
+  "keywords": ["luna", "chat", "streamlit"],
+  "author": "Luna Team",
+  "license": "MIT"
+}
+

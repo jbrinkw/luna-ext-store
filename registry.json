@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "last_updated": "2025-10-22T00:05:00Z",
+  "last_updated": "2025-11-04T00:05:00Z",
   
   "extensions": [
     {
@@ -23,7 +23,7 @@
       "name": "Home Assistant",
       "type": "embedded",
       "path": "embedded/home_assistant",
-      "version": "10-19-25",
+      "version": "11-04-25",
       "description": "Control and monitor Home Assistant devices including lights, switches, fans, media players, and TV remotes",
       "author": "Jeremy Brinkworth",
       "category": "smart-home",
@@ -49,12 +49,27 @@
       "tags": ["notes", "obsidian", "markdown", "projects", "productivity"]
     },
     {
+      "id": "obsidian_sync",
+      "name": "Obsidian Sync",
+      "type": "embedded",
+      "path": "embedded/obsidian_sync",
+      "version": "11-04-25",
+      "description": "Syncs Obsidian vault and provides note management tools with automatic synchronization service",
+      "author": "Jeremy Brinkworth",
+      "category": "productivity",
+      "has_ui": false,
+      "tool_count": 4,
+      "service_count": 1,
+      "required_secrets": ["OBSIDIAN_VAULT_LINK"],
+      "tags": ["notes", "obsidian", "sync", "vault", "markdown", "projects", "productivity"]
+    },
+    {
       "id": "quick_chat",
       "name": "Quick Chat",
       "type": "embedded",
       "path": "embedded/quick_chat",
-      "version": "10-21-25",
-      "description": "Quick chat interface with agent selection and MCP tools",
+      "version": "11-04-25",
+      "description": "Quick chat interface with agent selection or MCP server selection with LangChain ReAct agent",
       "author": "Jeremy Brinkworth",
       "category": "communication",
       "has_ui": true,

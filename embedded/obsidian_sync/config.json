@@ -1,0 +1,9 @@
+{
+  "version": "11-04-25",
+  "name": "Obsidian Sync",
+  "description": "Syncs Obsidian vault and provides note management tools",
+  "required_secrets": [
+    "OBSIDIAN_VAULT_LINK"
+  ],
+  "auto_update": false
+}
