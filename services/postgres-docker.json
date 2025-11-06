@@ -57,13 +57,7 @@
   "health_check_expected": "accepting connections",
   "install_timeout": 120,
   
-  "required_vars": [
-    "DB_HOST",
-    "DB_PORT", 
-    "DB_NAME",
-    "DB_USER",
-    "DB_PASSWORD"
-  ],
+  "required_vars": [],
   "provides_vars": [
     "DATABASE_URL",
     "DB_HOST",

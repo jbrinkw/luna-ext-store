@@ -1,0 +1,52 @@
+{
+  "name": "tailscale",
+  "display_name": "Tailscale (Native)",
+  "description": "Zero-config VPN for secure access to your Luna instance from anywhere. Installs as a native system service (recommended over Docker).",
+  "category": "infrastructure",
+  "author": "Luna Team",
+  "version": "latest",
+
+  "config_form": {
+    "fields": [
+      {
+        "name": "auth_key",
+        "label": "Auth Key",
+        "type": "password",
+        "required": true,
+        "help": "Tailscale auth key from https://login.tailscale.com/admin/settings/keys. Use a reusable key for easier management."
+      },
+      {
+        "name": "hostname",
+        "label": "Hostname",
+        "type": "text",
+        "default": "luna",
+        "required": true,
+        "help": "Hostname for this device in your Tailscale network"
+      }
+    ]
+  },
+
+  "commands": {
+    "install": "curl -fsSL https://tailscale.com/install.sh | sh && tailscale up --authkey={{auth_key}} --hostname={{hostname}} --accept-routes --accept-dns=false",
+    "uninstall": "tailscale down 2>/dev/null || true && systemctl stop tailscaled 2>/dev/null || true && systemctl disable tailscaled 2>/dev/null || true",
+    "start": "systemctl start tailscaled && sleep 2",
+    "stop": "systemctl stop tailscaled",
+    "restart": "systemctl restart tailscaled && sleep 2",
+    "health_check": "tailscale status --json | grep -q '\"BackendState\":\"Running\"'",
+    "enable_startup": "systemctl enable tailscaled",
+    "disable_startup": "systemctl disable tailscaled"
+  },
+
+  "health_check_expected": 0,
+  "install_timeout": 180,
+
+  "required_vars": [],
+  "provides_vars": [
+    "TAILSCALE_HOSTNAME",
+    "TAILSCALE_IP"
+  ],
+  "post_install_env": {
+    "TAILSCALE_HOSTNAME": "{{ hostname }}",
+    "TAILSCALE_IP": "$(tailscale ip -4 2>/dev/null || echo 'pending')"
+  }
+}

@@ -10,7 +10,19 @@
   "has_ui": false,
   "tool_count": 12,
   "service_count": 0,
-  "required_secrets": ["GROCY_BASE_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+  "required_secrets": ["GROCY_API_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+  "secret_definitions": {
+    "TIME_ZONE": {
+      "label": "Timezone",
+      "help": "3-letter timezone code (e.g. EST, PST, MST, CST). Defaults to EST.",
+      "default": "EST"
+    },
+    "DAY_START_TIME": {
+      "label": "Day Start Time",
+      "help": "Time when your day begins in HHMM format (e.g. 0400, 0600, 0800). Defaults to 0400.",
+      "default": "0400"
+    }
+  },
   "tags": ["grocy", "grocery", "inventory", "shopping", "meal-planning", "nutrition", "ai", "productivity"],
   "preview_url": "https://github.com/jbrinkw/luna-ext-chefbyte"
 }

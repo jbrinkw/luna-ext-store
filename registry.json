@@ -90,7 +90,19 @@
       "has_ui": false,
       "tool_count": 12,
       "service_count": 0,
-      "required_secrets": ["GROCY_BASE_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+      "required_secrets": ["GROCY_API_URL", "GROCY_API_KEY", "OPENAI_API_KEY", "TIME_ZONE", "DAY_START_TIME"],
+      "secret_definitions": {
+        "TIME_ZONE": {
+          "label": "Timezone",
+          "help": "3-letter timezone code (e.g. EST, PST, MST, CST). Defaults to EST.",
+          "default": "EST"
+        },
+        "DAY_START_TIME": {
+          "label": "Day Start Time",
+          "help": "Time when your day begins in HHMM format (e.g. 0400, 0600, 0800). Defaults to 0400.",
+          "default": "0400"
+        }
+      },
       "tags": ["grocy", "grocery", "inventory", "shopping", "meal-planning", "nutrition", "ai", "productivity"],
       "preview_url": "https://github.com/jbrinkw/luna-ext-chefbyte"
     }
@@ -116,11 +128,11 @@
       "tags": ["database", "sql", "docker"],
       "provides_vars": [
         "DATABASE_URL",
-        "POSTGRES_HOST",
-        "POSTGRES_PORT",
-        "POSTGRES_DB",
-        "POSTGRES_USER",
-        "POSTGRES_PASSWORD"
+        "DB_HOST",
+        "DB_PORT",
+        "DB_NAME",
+        "DB_USER",
+        "DB_PASSWORD"
       ],
       "config_fields": 4,
       "service_definition": {
@@ -171,35 +183,38 @@
           "start": "docker start luna_postgres",
           "stop": "docker stop luna_postgres",
           "restart": "docker restart luna_postgres",
-          "health_check": "docker ps --filter name=luna_postgres --format '{{.Status}}'"
+          "health_check": "docker ps --filter name=luna_postgres --format '{{.Status}}'",
+          "enable_startup": "docker update --restart=always luna_postgres",
+          "disable_startup": "docker update --restart=unless-stopped luna_postgres"
         },
         "health_check_expected": "Up",
         "install_timeout": 180,
+        "required_vars": [],
         "provides_vars": [
           "DATABASE_URL",
-          "POSTGRES_HOST",
-          "POSTGRES_PORT",
-          "POSTGRES_DB",
-          "POSTGRES_USER",
-          "POSTGRES_PASSWORD"
+          "DB_HOST",
+          "DB_PORT",
+          "DB_NAME",
+          "DB_USER",
+          "DB_PASSWORD"
         ],
         "post_install_env": {
           "DATABASE_URL": "postgresql://{{ user }}:{{ password }}@127.0.0.1:{{ port }}/{{ database }}",
-          "POSTGRES_HOST": "127.0.0.1",
-          "POSTGRES_PORT": "{{ port }}",
-          "POSTGRES_DB": "{{ database }}",
-          "POSTGRES_USER": "{{ user }}",
-          "POSTGRES_PASSWORD": "{{ password }}"
+          "DB_HOST": "127.0.0.1",
+          "DB_PORT": "{{ port }}",
+          "DB_NAME": "{{ database }}",
+          "DB_USER": "{{ user }}",
+          "DB_PASSWORD": "{{ password }}"
         }
       }
     },
     {
       "name": "tailscale",
-      "display_name": "Tailscale",
-      "description": "Zero-config VPN for secure access to your Luna instance from anywhere",
+      "display_name": "Tailscale (Native)",
+      "description": "Zero-config VPN for secure access to your Luna instance from anywhere. Installs as a native system service.",
       "category": "infrastructure",
       "version": "latest",
-      "repository": "https://tailscale.com/kb/1112/userspace-networking",
+      "repository": "https://tailscale.com",
       "path": "services/tailscale",
       "tags": ["vpn", "networking", "security", "remote-access"],
       "provides_vars": [
@@ -209,8 +224,8 @@
       "config_fields": 2,
       "service_definition": {
         "name": "tailscale",
-        "display_name": "Tailscale",
-        "description": "Zero-config VPN for secure access to your Luna instance from anywhere. Requires a Tailscale account (free for personal use).",
+        "display_name": "Tailscale (Native)",
+        "description": "Zero-config VPN for secure access to your Luna instance from anywhere. Installs as a native system service (recommended over Docker).",
         "category": "infrastructure",
         "version": "latest",
         "repository": "https://tailscale.com",
@@ -235,22 +250,25 @@
           ]
         },
         "commands": {
-          "install": "mkdir -p $(pwd)/external_services/tailscale/state && docker run -d --name luna_tailscale --restart unless-stopped --network=host --cap-add=NET_ADMIN --cap-add=NET_RAW -v $(pwd)/external_services/tailscale/state:/var/lib/tailscale -e TS_AUTHKEY={{ auth_key }} -e TS_HOSTNAME={{ hostname }} -e TS_STATE_DIR=/var/lib/tailscale tailscale/tailscale:latest",
-          "uninstall": "docker rm -f luna_tailscale || true && rm -rf $(pwd)/external_services/tailscale/state",
-          "start": "docker start luna_tailscale",
-          "stop": "docker stop luna_tailscale",
-          "restart": "docker restart luna_tailscale",
-          "health_check": "docker exec luna_tailscale tailscale status --json | grep -q '\"BackendState\":\"Running\"'"
+          "install": "curl -fsSL https://tailscale.com/install.sh | sh && tailscale up --authkey={{auth_key}} --hostname={{hostname}} --accept-routes --accept-dns=false",
+          "uninstall": "tailscale down 2>/dev/null || true && systemctl stop tailscaled 2>/dev/null || true && systemctl disable tailscaled 2>/dev/null || true",
+          "start": "systemctl start tailscaled && sleep 2",
+          "stop": "systemctl stop tailscaled",
+          "restart": "systemctl restart tailscaled && sleep 2",
+          "health_check": "tailscale status --json | grep -q '\"BackendState\":\"Running\"'",
+          "enable_startup": "systemctl enable tailscaled",
+          "disable_startup": "systemctl disable tailscaled"
         },
         "health_check_expected": 0,
         "install_timeout": 180,
+        "required_vars": [],
         "provides_vars": [
           "TAILSCALE_HOSTNAME",
           "TAILSCALE_IP"
         ],
         "post_install_env": {
           "TAILSCALE_HOSTNAME": "{{ hostname }}",
-          "TAILSCALE_IP": "$(docker exec luna_tailscale tailscale ip -4 2>/dev/null || echo 'pending')"
+          "TAILSCALE_IP": "$(tailscale ip -4 2>/dev/null || echo 'pending')"
         }
       }
     },
@@ -265,9 +283,12 @@
       "tags": ["grocy", "household", "inventory", "docker", "dashboard"],
       "provides_vars": [
         "GROCY_URL",
-        "GROCY_PORT"
+        "GROCY_BASE_URL",
+        "GROCY_API_URL",
+        "GROCY_PORT",
+        "GROCY_API_KEY"
       ],
-      "config_fields": 4,
+      "config_fields": 2,
       "has_ui": true,
       "service_definition": {
         "name": "grocy",
@@ -290,48 +311,38 @@
               "name": "timezone",
               "label": "Timezone",
               "type": "text",
-              "default": "Etc/UTC",
+              "default": "America/New_York",
               "required": true,
-              "help": "TZ database name passed through to the container (e.g. America/New_York)."
-            },
-            {
-              "name": "puid",
-              "label": "PUID",
-              "type": "number",
-              "default": 1000,
-              "required": true,
-              "help": "Host user ID that should own the Grocy config directory."
-            },
-            {
-              "name": "pgid",
-              "label": "PGID",
-              "type": "number",
-              "default": 1000,
-              "required": true,
-              "help": "Host group ID that should own the Grocy config directory."
+              "help": "IANA timezone (e.g. America/New_York, Europe/London, Asia/Tokyo). Defaults to EST."
             }
           ]
         },
         "commands": {
           "install": "docker pull lscr.io/linuxserver/grocy:latest || docker pull linuxserver/grocy:latest",
           "uninstall": "docker rm -f luna_grocy 2>/dev/null || true && rm -rf external_services/grocy/data",
-          "start": "mkdir -p external_services/grocy/data/data && ( docker container inspect luna_grocy >/dev/null 2>&1 && docker start luna_grocy || docker run -d --name luna_grocy --restart unless-stopped -p {{port}}:80 -e PUID={{puid}} -e PGID={{pgid}} -e TZ={{timezone}} -e GROCY_BASE_URL=/ext_service/grocy -e GROCY_MODE=production -e GROCY_DISABLE_AUTH=true -v $(pwd)/external_services/grocy/data:/config lscr.io/linuxserver/grocy:latest )",
+          "start": "mkdir -p external_services/grocy/data/data && ( docker container inspect luna_grocy >/dev/null 2>&1 && docker start luna_grocy || docker run -d --name luna_grocy --restart unless-stopped -p {{port}}:80 -e PUID=1000 -e PGID=1000 -e TZ={{timezone}} -e GROCY_BASE_URL=/ext_service/grocy -e GROCY_MODE=production -e GROCY_DISABLE_AUTH=true -v $(pwd)/external_services/grocy/data:/config lscr.io/linuxserver/grocy:latest )",
           "stop": "docker stop luna_grocy 2>/dev/null || true",
           "restart": "docker restart luna_grocy",
-          "health_check": "curl -sfL http://127.0.0.1:{{port}}/ | grep -qi \"grocy\" && echo 1 || echo 0",
+          "health_check": "docker ps --filter name=luna_grocy --filter status=running --format '{{.Status}}'",
           "enable_startup": "docker update --restart=always luna_grocy",
           "disable_startup": "docker update --restart=unless-stopped luna_grocy"
         },
-        "health_check_expected": "1",
+        "health_check_expected": "Up",
         "install_timeout": 180,
         "required_vars": [],
         "provides_vars": [
           "GROCY_URL",
-          "GROCY_PORT"
+          "GROCY_BASE_URL",
+          "GROCY_API_URL",
+          "GROCY_PORT",
+          "GROCY_API_KEY"
         ],
         "post_install_env": {
           "GROCY_URL": "http://127.0.0.1:{{ port }}",
-          "GROCY_PORT": "{{ port }}"
+          "GROCY_BASE_URL": "http://127.0.0.1:{{ port }}",
+          "GROCY_API_URL": "http://127.0.0.1:{{ port }}/api",
+          "GROCY_PORT": "{{ port }}",
+          "GROCY_API_KEY": ""
         },
         "ui": {
           "base_path": "ext_service",
