@@ -105,6 +105,22 @@
       },
       "tags": ["grocy", "grocery", "inventory", "shopping", "meal-planning", "nutrition", "ai", "productivity"],
       "preview_url": "https://github.com/jbrinkw/luna-ext-chefbyte"
+    },
+    {
+      "id": "coachbyte",
+      "name": "CoachByte",
+      "type": "external",
+      "source": "github:jbrinkw/luna_ext_coachbyte",
+      "version": "11-07-25",
+      "description": "Comprehensive workout tracking and planning with daily workout plans, progress tracking, weekly split management, and personal records",
+      "author": "Jeremy Brinkworth",
+      "category": "productivity",
+      "has_ui": true,
+      "tool_count": 5,
+      "service_count": 1,
+      "required_secrets": ["DB_HOST", "DB_NAME", "DB_PASSWORD", "DB_PORT", "DB_USER"],
+      "tags": ["workout", "fitness", "tracking", "exercise", "planning", "timer", "health", "productivity"],
+      "preview_url": "https://github.com/jbrinkw/luna_ext_coachbyte"
     }
   ],
   
